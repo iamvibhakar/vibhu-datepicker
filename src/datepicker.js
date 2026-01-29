@@ -1,15 +1,19 @@
 export default class VibhuDatepicker {
   constructor(input, options = {}) {
-    this.input =
-      typeof input === 'string'
-        ? document.querySelector(input)
-        : input;
+    this.input = typeof input === 'string'
+      ? document.querySelector(input)
+      : input;
 
     this.options = {
       theme: 'light',
       selectionMode: 'single',
-      closeOnSelect: undefined,
+      viewMode: 'date', // date | month | year
+      disablePast: false,
+      disableFuture: false,
+      minDate: null,
+      maxDate: null,
       multipleDelimiter: ', ',
+      closeOnSelect: undefined,
       onSelect: () => {},
       ...options
     };
@@ -19,6 +23,7 @@ export default class VibhuDatepicker {
     }
 
     this.current = new Date();
+    this.view = this.options.viewMode;
     this.selectedKeys = [];
     this.selectedSet = new Set();
 
@@ -31,46 +36,84 @@ export default class VibhuDatepicker {
     this.root.className = `vdp ${this.options.theme}`;
 
     this.calendar = document.createElement('div');
-    this.calendar.className = 'vdp-calendar';
-
-    this.render();
-
-    document.body.appendChild(this.root);
     this.root.appendChild(this.calendar);
 
+    document.body.appendChild(this.root);
     this.position();
+    this.render();
     this.bindEvents();
   }
 
   position() {
     const r = this.input.getBoundingClientRect();
-    this.root.style.top = r.bottom + window.scrollY + 'px';
+    this.root.style.top = r.bottom + window.scrollY + 8 + 'px';
     this.root.style.left = r.left + window.scrollX + 'px';
   }
 
   render() {
     const y = this.current.getFullYear();
     const m = this.current.getMonth();
-    const monthLabel = this.monthName(m);
 
     this.calendar.innerHTML = `
       <div class="vdp-header">
-        <button class="vdp-nav" data-prev aria-label="Previous month">&lsaquo;</button>
+        <button class="vdp-nav" data-prev>&lsaquo;</button>
+
         <div class="vdp-title">
-          <span class="vdp-month">${monthLabel}</span>
-          <span class="vdp-year">${y}</span>
+          <span class="vdp-month" data-view="month">
+            ${this.monthName(m)}
+          </span>
+          <span class="vdp-year" data-view="year">
+            ${y}
+          </span>
         </div>
-        <button class="vdp-nav" data-next aria-label="Next month">&rsaquo;</button>
+
+        <button class="vdp-nav" data-next>&rsaquo;</button>
       </div>
+
+      ${this.view === 'date' ? this.renderDates(y, m) : ''}
+      ${this.view === 'month' ? this.renderMonths() : ''}
+      ${this.view === 'year' ? this.renderYears() : ''}
+
+      <div class="vdp-footer">
+        <span class="vdp-hint">
+          ${this.options.selectionMode === 'multiple'
+            ? `${this.selectedKeys.length} selected`
+            : 'Select a date'}
+        </span>
+        <button class="vdp-clear" data-clear>Clear</button>
+      </div>
+    `;
+  }
+
+  renderDates(year, month) {
+    return `
       <div class="vdp-weekdays">
-        ${this.weekdays().map(day => `<div>${day}</div>`).join('')}
+        ${this.weekdays().map(d => `<div>${d}</div>`).join('')}
       </div>
       <div class="vdp-grid">
-        ${this.days(y, m)}
+        ${this.days(year, month)}
       </div>
-      <div class="vdp-footer">
-        ${this.options.selectionMode === 'multiple' ? '<span class="vdp-hint">Select multiple dates</span>' : '<span class="vdp-hint">Select a date</span>'}
-        <button class="vdp-clear" data-clear>Clear</button>
+    `;
+  }
+
+  renderMonths() {
+    return `
+      <div class="vdp-month-grid">
+        ${this.monthNameList().map((m, i) =>
+          `<button data-month="${i}">${m.slice(0, 3)}</button>`
+        ).join('')}
+      </div>
+    `;
+  }
+
+  renderYears() {
+    const base = this.current.getFullYear() - 6;
+    return `
+      <div class="vdp-year-grid">
+        ${Array.from({ length: 12 }).map((_, i) => {
+          const y = base + i;
+          return `<button data-year="${y}">${y}</button>`;
+        }).join('')}
       </div>
     `;
   }
@@ -78,7 +121,6 @@ export default class VibhuDatepicker {
   days(year, month) {
     const total = new Date(year, month + 1, 0).getDate();
     const firstDay = new Date(year, month, 1).getDay();
-    const todayKey = this.formatDateKey(new Date());
     let html = '';
 
     for (let i = 0; i < firstDay; i++) {
@@ -86,112 +128,67 @@ export default class VibhuDatepicker {
     }
 
     for (let d = 1; d <= total; d++) {
-      const key = this.formatDateKey(new Date(year, month, d));
-      const classes = ['vdp-day'];
-      if (key === todayKey) classes.push('is-today');
-      if (this.selectedSet.has(key)) classes.push('is-selected');
+      const date = new Date(year, month, d);
+      const key = this.formatDateKey(date);
+      const disabled = this.isDisabled(date);
 
-      html += `<button class="${classes.join(' ')}" data-day="${d}" data-date="${key}">${d}</button>`;
+      const classes = ['vdp-day'];
+      if (this.selectedSet.has(key)) classes.push('is-selected');
+      if (disabled) classes.push('is-disabled');
+
+      html += disabled
+        ? `<button class="${classes.join(' ')}" disabled>${d}</button>`
+        : `<button class="${classes.join(' ')}" data-date="${key}">${d}</button>`;
     }
     return html;
   }
 
   bindEvents() {
     this.calendar.onclick = e => {
-      if (e.target.dataset.day) {
-        const selected = new Date(
-          this.current.getFullYear(),
-          this.current.getMonth(),
-          e.target.dataset.day
-        );
-        const key = e.target.dataset.date || this.formatDateKey(selected);
+      const t = e.target.dataset;
 
-        this.handleSelection(key, selected);
+      if (t.view) {
+        this.view = t.view;
+        this.render();
       }
 
-      if (e.target.dataset.prev !== undefined) {
+      if (t.prev !== undefined) {
         this.current.setMonth(this.current.getMonth() - 1);
         this.render();
       }
 
-      if (e.target.dataset.next !== undefined) {
+      if (t.next !== undefined) {
         this.current.setMonth(this.current.getMonth() + 1);
         this.render();
       }
 
-      if (e.target.dataset.clear !== undefined) {
+      if (t.month !== undefined) {
+        this.current.setMonth(+t.month);
+        this.view = 'date';
+        this.render();
+      }
+
+      if (t.year !== undefined) {
+        this.current.setFullYear(+t.year);
+        this.view = 'date';
+        this.render();
+      }
+
+      if (t.date) {
+        this.handleSelection(t.date);
+      }
+
+      if (t.clear !== undefined) {
         this.clearSelection();
       }
     };
   }
 
-  destroy() {
-    this.root.remove();
-  }
-
-  weekdays() {
-    return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  }
-
-  monthName(index) {
-    return [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December'
-    ][index];
-  }
-
-  formatDateKey(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  }
-
-  bootstrapSelection() {
-    if (!this.input || !this.input.value) return;
-
+  handleSelection(key) {
     if (this.options.selectionMode === 'multiple') {
-      const parts = this.input.value
-        .split(',')
-        .map(v => v.trim())
-        .filter(Boolean);
-      parts.forEach(key => this.addSelection(key));
-    } else {
-      this.addSelection(this.input.value.trim());
-    }
-  }
-
-  addSelection(key) {
-    if (!key) return;
-    if (!this.selectedSet.has(key)) {
-      this.selectedSet.add(key);
-      this.selectedKeys.push(key);
-    }
-  }
-
-  removeSelection(key) {
-    if (!this.selectedSet.has(key)) return;
-    this.selectedSet.delete(key);
-    this.selectedKeys = this.selectedKeys.filter(item => item !== key);
-  }
-
-  handleSelection(key, date) {
-    if (this.options.selectionMode === 'multiple') {
-      if (this.selectedSet.has(key)) {
-        this.removeSelection(key);
-      } else {
-        this.addSelection(key);
-      }
+      this.selectedSet.has(key)
+        ? this.removeSelection(key)
+        : this.addSelection(key);
     } else {
       this.selectedKeys = [key];
       this.selectedSet = new Set([key]);
@@ -200,11 +197,30 @@ export default class VibhuDatepicker {
     this.syncInput();
     this.options.onSelect(this.getSelected());
 
-    if (this.options.closeOnSelect) {
-      this.destroy();
-    } else {
-      this.render();
+    this.options.closeOnSelect ? this.destroy() : this.render();
+  }
+
+  isDisabled(date) {
+    const today = new Date(); today.setHours(0,0,0,0);
+
+    if (this.options.disablePast && date < today) return true;
+    if (this.options.disableFuture && date > today) return true;
+    if (this.options.minDate && date < new Date(this.options.minDate)) return true;
+    if (this.options.maxDate && date > new Date(this.options.maxDate)) return true;
+
+    return false;
+  }
+
+  addSelection(key) {
+    if (!this.selectedSet.has(key)) {
+      this.selectedSet.add(key);
+      this.selectedKeys.push(key);
     }
+  }
+
+  removeSelection(key) {
+    this.selectedSet.delete(key);
+    this.selectedKeys = this.selectedKeys.filter(k => k !== key);
   }
 
   clearSelection() {
@@ -216,21 +232,45 @@ export default class VibhuDatepicker {
   }
 
   syncInput() {
-    if (!this.input) return;
-
-    if (this.options.selectionMode === 'multiple') {
-      this.input.value = this.selectedKeys.join(this.options.multipleDelimiter);
-    } else {
-      this.input.value = this.selectedKeys[0] || '';
-    }
+    this.input.value =
+      this.options.selectionMode === 'multiple'
+        ? this.selectedKeys.join(this.options.multipleDelimiter)
+        : this.selectedKeys[0] || '';
   }
 
   getSelected() {
-    if (this.options.selectionMode === 'multiple') {
-      return this.selectedKeys.map(key => new Date(`${key}T00:00:00`));
-    }
+    return this.options.selectionMode === 'multiple'
+      ? this.selectedKeys.map(k => new Date(`${k}T00:00:00`))
+      : this.selectedKeys[0]
+        ? new Date(`${this.selectedKeys[0]}T00:00:00`)
+        : null;
+  }
 
-    if (!this.selectedKeys[0]) return null;
-    return new Date(`${this.selectedKeys[0]}T00:00:00`);
+  weekdays() {
+    return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  }
+
+  monthName(i) {
+    return this.monthNameList()[i];
+  }
+
+  monthNameList() {
+    return [
+      'January','February','March','April','May','June',
+      'July','August','September','October','November','December'
+    ];
+  }
+
+  formatDateKey(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  bootstrapSelection() {
+    if (!this.input.value) return;
+    this.input.value.split(',').map(v => v.trim()).forEach(k => this.addSelection(k));
+  }
+
+  destroy() {
+    this.root?.remove();
   }
 }

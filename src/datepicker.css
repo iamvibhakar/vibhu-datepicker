@@ -182,3 +182,35 @@
 .vdp-clear:hover {
   background: #e2e8f0;
 }
+
+
+.vdp-month,
+.vdp-year {
+  cursor: pointer;
+}
+
+.vdp-month-grid,
+.vdp-year-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.vdp-month-grid button,
+.vdp-year-grid button {
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: #f1f5f9;
+  cursor: pointer;
+}
+
+.vdp-month-grid button:hover,
+.vdp-year-grid button:hover {
+  background: #e0e7ff;
+}
+
+.vdp-day.is-disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
