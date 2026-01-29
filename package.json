@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "@iamvibhakar/datepicker",
-  "version": "1.0.2",
+  "version": "1.0.1",
   "description": "Framework-agnostic, fully customizable datepicker",
   "main": "dist/datepicker.umd.js",
   "module": "dist/datepicker.esm.js",
