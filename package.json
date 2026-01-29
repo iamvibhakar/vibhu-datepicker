@@ -1,0 +1,32 @@
+{
+  "type": "module",
+  "name": "@iamvibhakar/datepicker",
+  "version": "1.0.1",
+  "description": "Framework-agnostic, fully customizable datepicker",
+  "main": "dist/datepicker.umd.js",
+  "module": "dist/datepicker.esm.js",
+  "style": "dist/datepicker.css",
+  "author": "Vibhakar Kumar",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "devDependencies": {
+    "rollup": "^4.57.0",
+    "rollup-plugin-postcss": "^4.0.2"
+  },
+  "keywords": [
+    "datepicker",
+    "calendar",
+    "date-picker",
+    "javascript",
+    "react",
+    "angular",
+    "vue",
+    "frontend",
+    "ui-component"
+  ]
+}
