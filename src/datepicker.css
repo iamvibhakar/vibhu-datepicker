@@ -1,118 +1,75 @@
 .vdp {
   position: absolute;
   background: #ffffff;
-  border-radius: 14px;
-  padding: 12px;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.15);
-  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+  border: 1px solid #eef2f7;
   font-family: system-ui, sans-serif;
-  width: 280px;
+  width: 320px;
   z-index: 9999;
 }
 
 .vdp.dark {
   background: #0f172a;
-  color: white;
+  color: #e5e7eb;
   border-color: rgba(148, 163, 184, 0.2);
-}
-
-.vdp.dark .vdp-month,
-.vdp.dark .vdp-year,
-.vdp.dark .vdp-hint {
-  color: #e2e8f0;
-}
-
-.vdp.dark .vdp-weekdays {
-  color: #94a3b8;
-}
-
-.vdp.dark .vdp-nav {
-  background: #1e293b;
-  border-color: #334155;
-  color: #e2e8f0;
-}
-
-.vdp.dark .vdp-nav:hover {
-  background: #334155;
-}
-
-.vdp.dark .vdp-day {
-  color: #e2e8f0;
-}
-
-.vdp.dark .vdp-day:hover {
-  background: #312e81;
-  color: #ffffff;
-}
-
-.vdp.dark .vdp-day.is-today {
-  border-color: #64748b;
-}
-
-.vdp.dark .vdp-clear {
-  background: #1e293b;
-  color: #e2e8f0;
-}
-
-.vdp.dark .vdp-clear:hover {
-  background: #334155;
 }
 
 .vdp-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .vdp-title {
-  display: flex;
-  flex-direction: column;
+  display: inline-flex;
   align-items: center;
+  gap: 6px;
+  font-size: 18px;
   font-weight: 600;
-  font-size: 14px;
-  letter-spacing: 0.2px;
+  color: #2b2f38;
 }
 
-.vdp-month {
-  color: #0f172a;
-  font-size: 15px;
+.vdp-month,
+.vdp-year {
+  cursor: pointer;
 }
 
 .vdp-year {
   color: #64748b;
-  font-size: 12px;
+  font-weight: 500;
 }
 
 .vdp-nav {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
+  border: none;
+  background: transparent;
   cursor: pointer;
-  color: #0f172a;
-  font-size: 18px;
+  color: #374151;
+  font-size: 20px;
   display: grid;
   place-items: center;
   transition: all 0.2s ease;
 }
 
 .vdp-nav:hover {
-  background: #eef2ff;
-  border-color: #c7d2fe;
+  background: #f3f4f6;
 }
 
 .vdp-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 6px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   font-size: 12px;
-  color: #94a3b8;
+  color: #9aa0a6;
   text-align: center;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.3px;
 }
 
 .vdp-grid {
@@ -123,7 +80,7 @@
 
 .vdp-grid button,
 .vdp-empty {
-  height: 34px;
+  height: 36px;
 }
 
 .vdp-empty {
@@ -134,83 +91,113 @@
   border: none;
   padding: 0;
   cursor: pointer;
-  border-radius: 10px;
+  border-radius: 999px;
   background: transparent;
-  color: #0f172a;
+  color: #111827;
   font-weight: 500;
   transition: all 0.2s ease;
 }
 
 .vdp-day:hover {
-  background: #e0e7ff;
-  color: #1e1b4b;
+  background: #f3f4f6;
 }
 
 .vdp-day.is-selected {
-  background: linear-gradient(135deg, #4f46e5, #6366f1);
-  color: #ffffff;
-  box-shadow: 0 10px 16px rgba(79, 70, 229, 0.25);
+  background: #f4d6b5;
+  color: #1f2937;
 }
 
 .vdp-day.is-today {
-  border: 1px solid #94a3b8;
+  border: 1px solid #cbd5e1;
+}
+
+.vdp-day.is-disabled {
+  color: #cbd5e1;
+  cursor: not-allowed;
 }
 
 .vdp-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 
 .vdp-hint {
   font-size: 12px;
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .vdp-clear {
   border: none;
-  background: #f1f5f9;
-  color: #0f172a;
-  padding: 6px 10px;
-  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
   cursor: pointer;
   font-size: 12px;
-  transition: all 0.2s ease;
+  padding: 4px 6px;
 }
 
 .vdp-clear:hover {
-  background: #e2e8f0;
-}
-
-
-.vdp-month,
-.vdp-year {
-  cursor: pointer;
+  color: #111827;
 }
 
 .vdp-month-grid,
 .vdp-year-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  gap: 10px;
+  padding: 8px 0 4px;
 }
 
 .vdp-month-grid button,
 .vdp-year-grid button {
-  padding: 10px;
+  height: 36px;
   border-radius: 10px;
   border: none;
-  background: #f1f5f9;
+  background: #f3f4f6;
+  font-weight: 500;
   cursor: pointer;
 }
 
 .vdp-month-grid button:hover,
 .vdp-year-grid button:hover {
-  background: #e0e7ff;
+  background: #e5e7eb;
 }
 
-.vdp-day.is-disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
+.vdp.dark .vdp-title {
+  color: #e5e7eb;
+}
+
+.vdp.dark .vdp-year,
+.vdp.dark .vdp-hint {
+  color: #94a3b8;
+}
+
+.vdp.dark .vdp-nav {
+  color: #e5e7eb;
+}
+
+.vdp.dark .vdp-nav:hover {
+  background: #1f2937;
+}
+
+.vdp.dark .vdp-weekdays {
+  color: #64748b;
+}
+
+.vdp.dark .vdp-day {
+  color: #e5e7eb;
+}
+
+.vdp.dark .vdp-day:hover {
+  background: #1f2937;
+}
+
+.vdp.dark .vdp-day.is-selected {
+  background: #f4d6b5;
+  color: #111827;
+}
+
+.vdp.dark .vdp-clear:hover {
+  color: #e5e7eb;
 }

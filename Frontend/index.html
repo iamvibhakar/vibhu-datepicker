@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Vibhakar Datepicker Demo</title>
+
+  <!-- Datepicker CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/@iamvibhakar/datepicker/dist/datepicker.css">
+
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      padding: 40px;
+    }
+
+    input {
+      padding: 10px;
+      width: 220px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>Simple HTML + JS Datepicker</h2>
+
+  <input id="date" placeholder="Select date" />
+
+  <!-- Datepicker JS (UMD build) -->
+
+  <script src="https://unpkg.com/@iamvibhakar/datepicker/dist/datepicker.umd.js"></script>
+  <script>
+    new VibhuDatepicker('#date', {
+      // theme: 'dark',
+      onSelect: function (date) {
+        console.log('Selected:', date);
+      }
+    });
+  </script>
+
+</body>
+
+</html>

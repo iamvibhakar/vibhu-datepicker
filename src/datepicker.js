@@ -12,9 +12,11 @@ export default class VibhuDatepicker {
       disableFuture: false,
       minDate: null,
       maxDate: null,
+      disableDates: [],
+      allowInput: false,
       multipleDelimiter: ', ',
       closeOnSelect: undefined,
-      onSelect: () => {},
+      onSelect: () => { },
       ...options
     };
 
@@ -26,6 +28,7 @@ export default class VibhuDatepicker {
     this.view = this.options.viewMode;
     this.selectedKeys = [];
     this.selectedSet = new Set();
+    this.disabledSet = new Set(this.normalizeDisabledDates(this.options.disableDates));
 
     this.bootstrapSelection();
     this.mount();
@@ -42,6 +45,7 @@ export default class VibhuDatepicker {
     this.position();
     this.render();
     this.bindEvents();
+    this.bindInputGuards();
   }
 
   position() {
@@ -56,19 +60,20 @@ export default class VibhuDatepicker {
 
     this.calendar.innerHTML = `
       <div class="vdp-header">
-        <button class="vdp-nav" data-prev>&lsaquo;</button>
+        <button class="vdp-nav" data-prev aria-label="Previous month">‹</button>
 
         <div class="vdp-title">
           <span class="vdp-month" data-view="month">
-            ${this.monthName(m)}
+            ${this.monthName(this.current.getMonth())}
           </span>
           <span class="vdp-year" data-view="year">
-            ${y}
+            ${this.current.getFullYear()}
           </span>
         </div>
 
-        <button class="vdp-nav" data-next>&rsaquo;</button>
+        <button class="vdp-nav" data-next aria-label="Next month">›</button>
       </div>
+
 
       ${this.view === 'date' ? this.renderDates(y, m) : ''}
       ${this.view === 'month' ? this.renderMonths() : ''}
@@ -77,8 +82,8 @@ export default class VibhuDatepicker {
       <div class="vdp-footer">
         <span class="vdp-hint">
           ${this.options.selectionMode === 'multiple'
-            ? `${this.selectedKeys.length} selected`
-            : 'Select a date'}
+        ? `${this.selectedKeys.length} selected`
+        : 'Select a date'}
         </span>
         <button class="vdp-clear" data-clear>Clear</button>
       </div>
@@ -100,8 +105,8 @@ export default class VibhuDatepicker {
     return `
       <div class="vdp-month-grid">
         ${this.monthNameList().map((m, i) =>
-          `<button data-month="${i}">${m.slice(0, 3)}</button>`
-        ).join('')}
+      `<button data-month="${i}">${m.slice(0, 3)}</button>`
+    ).join('')}
       </div>
     `;
   }
@@ -111,9 +116,9 @@ export default class VibhuDatepicker {
     return `
       <div class="vdp-year-grid">
         ${Array.from({ length: 12 }).map((_, i) => {
-          const y = base + i;
-          return `<button data-year="${y}">${y}</button>`;
-        }).join('')}
+      const y = base + i;
+      return `<button data-year="${y}">${y}</button>`;
+    }).join('')}
       </div>
     `;
   }
@@ -201,12 +206,17 @@ export default class VibhuDatepicker {
   }
 
   isDisabled(date) {
-    const today = new Date(); today.setHours(0,0,0,0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const key = this.formatDateKey(date);
 
     if (this.options.disablePast && date < today) return true;
     if (this.options.disableFuture && date > today) return true;
     if (this.options.minDate && date < new Date(this.options.minDate)) return true;
     if (this.options.maxDate && date > new Date(this.options.maxDate)) return true;
+    if (this.disabledSet.has(key)) return true;
+    if (typeof this.options.disableDates === 'function') {
+      return this.options.disableDates(date) === true;
+    }
 
     return false;
   }
@@ -247,7 +257,7 @@ export default class VibhuDatepicker {
   }
 
   weekdays() {
-    return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   }
 
   monthName(i) {
@@ -256,18 +266,45 @@ export default class VibhuDatepicker {
 
   monthNameList() {
     return [
-      'January','February','March','April','May','June',
-      'July','August','September','October','November','December'
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
     ];
   }
 
   formatDateKey(d) {
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
   bootstrapSelection() {
     if (!this.input.value) return;
-    this.input.value.split(',').map(v => v.trim()).forEach(k => this.addSelection(k));
+    if (this.options.selectionMode === 'multiple') {
+      this.input.value
+        .split(this.options.multipleDelimiter)
+        .map(v => v.trim())
+        .filter(Boolean)
+        .forEach(k => this.addSelection(k));
+    } else {
+      const value = this.input.value.trim();
+      if (value) this.addSelection(value);
+    }
+  }
+
+  bindInputGuards() {
+    if (!this.input || this.options.allowInput) return;
+
+    this.input.readOnly = true;
+    this.input.addEventListener('keydown', e => e.preventDefault());
+    this.input.addEventListener('paste', e => e.preventDefault());
+    this.input.addEventListener('drop', e => e.preventDefault());
+  }
+
+  normalizeDisabledDates(disabled) {
+    if (!Array.isArray(disabled)) return [];
+    return disabled.map(item => {
+      if (item instanceof Date) return this.formatDateKey(item);
+      if (typeof item === 'string') return item.trim();
+      return '';
+    }).filter(Boolean);
   }
 
   destroy() {
